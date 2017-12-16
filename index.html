@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="vue.js"></script>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    body, html {
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        background: #CDCDCD;
+    }
+
+    div#app {
+        width: 100%;
+        height: 100%;
+    }
+
+    header {
+        width: 100%;
+        height: 50px;
+        background: rgba(47, 47, 47, 0.98);
+        display: flex;
+        align-items: center;
+        color: #E6E6FA;
+    }
+
+    section.header {
+        width: 80%;
+        padding: 0 10px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .title label {
+        padding: 0 10px 0 20px;
+    }
+
+    .title input,select{
+        width: 30%;
+        height: 24px;
+        text-indent: 10px;
+        border-radius: 5px;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.24), 0 1px 6px rgba(0, 0, 0, 0.45) inset;
+        border: none;
+        outline: none;
+    }
+    .title select {
+        width: 15%;
+        outline: none;
+    }
+    .title span {
+        position: absolute;
+        top: 2px;
+        right: 5px;
+        display: inline-block;
+        padding: 0 5px;
+        height: 20px;
+        border-radius: 20px;
+        background: #E6E6FA;
+        line-height: 20px;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    section.content {
+        width: 100%;
+        height: calc(100vh - 50px);
+        /*margin: 0 auto;*/
+        overflow: hidden;
+        position: relative;
+    }
+    section.content ul > li {
+        width: 250px;
+        height: 285px;
+        background: #fff;
+        position: absolute;
+    }
+
+    .li_title {
+        width: 100%;
+        height: 35px;
+        padding: 0 10px;
+        line-height: 35px;
+        font-size: 18px;
+        color: #fff;
+        letter-spacing: .5em;
+        box-sizing: border-box;
+    }
+
+    .li_title span {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        display: inline-block;
+        width: 14px;
+        height: 12px;
+        border-radius: 14px;
+        border: 6px double #FFF;
+        background: #CCC;
+        line-height: 14px;
+        text-align: center;
+        color: #FFF;
+        font-weight: bold;
+        font-size: 10px;
+        cursor: pointer;
+        letter-spacing: 0;
+    }
+    section.content ul > li textarea {
+        width: 100%;
+        height: 250px;
+        padding: 10px;
+        box-sizing: border-box;
+        outline: none;
+        resize:none;
+        border: 0;
+    }
+    .active {
+        box-shadow: 0 0 15px 5px rgba(0, 0, 0, .3);
+        z-index: 99;
+    }
+</style>
+<body>
+<div id="app">
+    <header>
+        <section class="header">
+            <div class="title">
+                <label for="cha">查找</label>
+                <input type="text" id="cha" placeholder="请输入..." v-model="mess">
+                <label for="lei">请选择类别</label>
+                <select name="" id="lei" v-model="message">
+                    <option :value="types">全部</option>
+                    <option v-for="item in types" :value="item">{{item}}</option>
+                </select>
+                <span>{{crr.length}}</span>
+            </div>
+        </section>
+    </header>
+    <section class="content" @mousemove="move" @dblclick="add">
+        <ul>
+            <li v-for="(item,index) in newcrr" :style="{top:item.y+'px',left:item.x+'px'}"
+                :class="{active:activeid===item.id}" @mousedown="activeid=index">
+                <div class="li_title" @mousedown="down" @mouseup="up" :style="{background:item.color}">
+                    <select name="" v-model="item.types" @mousedown.stop>
+                        <option v-for="item in types" :value="item">{{item}}</option>
+                    </select>
+                    <span @click="crr.splice(index,1)">-</span>
+                </div>
+                <textarea v-model="item.content"></textarea>
+            </li>
+        </ul>
+    </section>
+</div>
+</body>
+</html>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            mess: '',
+            crr: [
+                {id: 0, content: "今天是个好天气", list: "今天", color: "red", x: 50, y: 100,types:'新闻'},
+                {id: 1, content: "明天是个好天气", list: "明天", color: "orange", x: 730, y: 280,types:'新闻'},
+                {id: 2, content: "后天是个好天气", list: "后天", color: "yellowgreen", x: 300, y: 200,types:'新闻'}
+            ],
+            offset: {x: 0, y: 0},
+            flag: false,
+            activeid: 0,
+            nextid:3,
+            types:["新闻","体育","科技"],
+            message:["新闻","体育","科技"]
+        },
+        computed: {
+            newcrr(){
+                var newcrr;
+                newcrr = this.crr.filter(val => val.content.includes(this.mess));
+                newcrr = newcrr.filter(val => this.message.includes(val.types));
+                return newcrr;
+            }
+        },
+        methods: {
+            down(e){
+                this.flag = true;
+                this.offset.x = e.offsetX;
+                this.offset.y = e.offsetY;
+            },
+            move(e){
+                var index = this.crr.findIndex(val => val.id === this.activeid);
+                if (index == -1) {
+                    return
+                }
+                if (this.flag) {
+                    this.crr[index].x = e.clientX - this.offset.x;
+                    this.crr[index].y = e.clientY - this.offset.y - 50;
+                }
+            },
+            up(){
+                this.flag = false
+            },
+            add(e){
+                var r=Math.floor(Math.random()*255);
+                var g=Math.floor(Math.random()*255);
+                var b=Math.floor(Math.random()*255);
+                this.crr.push({id: this.nextid, content: "", list: "", color: `rgb(${r},${g},${b})`, x: e.clientX, y: e.clientY-50,types:this.message instanceof Array?'新闻':this.message});
+                this.nextid++;
+            }
+        },
+        beforeMount(){
+            if (localStorage.crr){
+                this.crr=JSON.parse(localStorage.crr);
+                this.nextid=JSON.parse(localStorage.nextid);
+            }else {
+                localStorage.crr=JSON.stringify(this.crr);
+                localStorage.nextid=JSON.stringify(this.nextid);
+            }
+        },
+        updated(){
+            localStorage.crr=JSON.stringify(this.crr);
+            localStorage.nextid=JSON.stringify(this.nextid);
+        }
+    })
+</script>
